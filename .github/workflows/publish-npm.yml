@@ -12,26 +12,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 🛎️ Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 🧰 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: npm ci
 
-      - name: Publish to npm (with optional beta tag)
+      - name: ✅ Run tests
+        run: npm test
+
+      - name: 🏗️ Build package
+        run: npm run build
+
+      - name: 🔢 Set package.json version from tag
         run: |
+          TAG=${{ github.event.release.tag_name }}
+          VERSION=${TAG#v}
+          echo "Setting package.json version to $VERSION"
+          npm version "$VERSION" --no-git-tag-version
+
+      - name: 🚀 Publish to npm
+        run: |
+          echo "Publishing version: ${{ github.event.release.tag_name }}"
+          TAG="latest"
           if [[ "${{ github.event.release.tag_name }}" == *"beta"* ]]; then
-            echo "Publishing with beta tag..."
-            npm publish --tag beta
-          else
-            echo "Publishing as latest..."
-            npm publish
+            echo "Beta release detected."
+            TAG="beta"
           fi
+          npm publish --tag "$TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+          
