@@ -1,5 +1,7 @@
 # MCP Server for Bring! Shopping
 
+![bring-mcp](./assets/header.jpg)
+
 This project implements a local Model Context Protocol (MCP) server in TypeScript that exposes the functionalities of the Bring! shopping list API. It enables applications like Claude Desktop to interact with your Bring! shopping lists using standardized MCP tools.
 
 The server integrates the `bring-shopping` npm package for Bring! API access and leverages `@modelcontextprotocol/sdk` to provide an MCP-compliant server interface.
