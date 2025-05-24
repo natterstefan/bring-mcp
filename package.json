@@ -1,0 +1,47 @@
+{
+  "name": "bring-mcp",
+  "version": "0.9.0-beta",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "scripts": {
+    "test": "npm run format && eslint . --ext .ts && NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "tsc",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "clean": "rm -rf node_modules package-lock.json build",
+    "rebuild": "npm run clean && npm install && npm run build",
+    "format": "prettier --write ."
+  },
+  "keywords": [
+    "modelcontextprotocol",
+    "bring",
+    "shopping",
+    "mcp"
+  ],
+  "author": "florianwittkamp",
+  "license": "MIT",
+  "description": "MCP Server for Bring! Shopping",
+  "files": [
+    "build/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "bring-shopping": "^2.0.1",
+    "dotenv": "^16.5.0",
+    "zod": "^3.25.23"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.15.21",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1",
+    "eslint": "^9.27.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-jest": "^28.11.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.5.3",
+    "ts-jest": "^29.3.4",
+    "typescript": "^5.8.3"
+  }
+}
