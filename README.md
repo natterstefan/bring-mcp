@@ -8,8 +8,31 @@ The server integrates the `bring-shopping` npm package for Bring! API access and
 
 > **Disclaimer:**  
 > This is a personal project. I am not affiliated with Bring! Labs AG in any way.  
-> This project uses an **unofficial Bring! API**, which may change or be blocked at any time. 
+> This project uses an **unofficial Bring! API**, which may change or be blocked at any time.  
 > This could cause the MCP server to stop functioning without prior notice.
+
+---
+
+## 🧩 Recommended Claude Desktop Configuration
+
+To use this server in Claude Desktop via `npx`, insert the following into your `claude_desktop_config.json` file:
+
+```json
+{
+  "mcpServers": {
+    "bring-mcp": {
+      "command": "npx",
+      "args": ["-y", "bring-mcp@latest"],
+      "env": {
+        "MAIL": "your_bring_email@example.com",
+        "PW": "YOUR_BRING_PASSWORD_HERE"
+      }
+    }
+  }
+}
+```
+
+This is the recommended and most portable configuration. It ensures you always use the latest version published to npm without needing local installation.
 
 ---
 
@@ -58,6 +81,7 @@ The server integrates the `bring-shopping` npm package for Bring! API access and
    ```
 
 6. **Make script executable (optional on Unix):**
+
    ```bash
    chmod +x build/index.js
    ```
@@ -81,36 +105,31 @@ If successful, you'll see: `MCP server for Bring! API is running on STDIO` (on `
 1. Ensure `npm run build` has been executed.
 2. Ensure `.env` with valid credentials exists.
 3. Run Inspector:
+
    ```bash
    npx @modelcontextprotocol/inspector node /ABS/PATH/bring-mcp/build/index.js
    ```
 
 ---
 
-## 🧩 Claude Desktop Integration
+## 🧩 Claude Desktop Integration (Manual Local Setup)
 
-1. **Locate config:**
+Alternatively, if you prefer a locally built and installed version:
 
-   - macOS: `$HOME/Library/Application Support/Claude/claude_desktop_config.json`
-
-2. **Update config:**
-
-   ```json
-   {
-     "mcpServers": {
-       "mcp-bring": {
-         "command": "node",
-         "args": ["/ABSOLUTE/PATH/TO/bring-mcp/build/index.js"],
-         "env": {
-           "MAIL": "your_bring_email@example.com",
-           "PW": "YOUR_BRING_PASSWORD_HERE"
-         }
-       }
-     }
-   }
-   ```
-
-3. **Restart Claude Desktop.**
+```json
+{
+  "mcpServers": {
+    "mcp-bring": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/bring-mcp/build/index.js"],
+      "env": {
+        "MAIL": "your_bring_email@example.com",
+        "PW": "YOUR_BRING_PASSWORD_HERE"
+      }
+    }
+  }
+}
+```
 
 ---
 
