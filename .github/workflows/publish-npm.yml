@@ -30,6 +30,17 @@ jobs:
       - name: 🏗️ Build package
         run: npm run build
 
+      - name: ✍️ Add shebang to CLI entrypoint
+        run: |
+          FILE="build/index.js"
+          SHEBANG='#!/usr/bin/env node'
+          if ! head -n 1 "$FILE" | grep -q "$SHEBANG"; then
+            echo "Injecting shebang into $FILE"
+            (echo "$SHEBANG"; cat "$FILE") > "$FILE.tmp" && mv "$FILE.tmp" "$FILE"
+          else
+            echo "Shebang already present."
+          fi
+
       - name: 🔢 Set package.json version from tag
         run: |
           TAG=${{ github.event.release.tag_name }}
@@ -47,5 +58,4 @@ jobs:
           fi
           npm publish --tag "$TAG"
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
-          
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}          
