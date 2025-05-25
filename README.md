@@ -83,7 +83,7 @@ This is the recommended and most portable configuration. It ensures you always u
 6. **Make script executable (optional on Unix):**
 
    ```bash
-   chmod +x build/index.js
+   chmod +x build/src/index.js
    ```
 
 ---
@@ -93,7 +93,7 @@ This is the recommended and most portable configuration. It ensures you always u
 Launch the MCP server with:
 
 ```bash
-node build/index.js
+node build/src/index.js
 ```
 
 If successful, you'll see: `MCP server for Bring! API is running on STDIO` (on `stderr`).
@@ -107,7 +107,7 @@ If successful, you'll see: `MCP server for Bring! API is running on STDIO` (on `
 3. Run Inspector:
 
    ```bash
-   npx @modelcontextprotocol/inspector node /ABS/PATH/bring-mcp/build/index.js
+   npx @modelcontextprotocol/inspector node /ABS/PATH/bring-mcp/build/src/index.js
    ```
 
 ---
@@ -121,7 +121,7 @@ Alternatively, if you prefer a locally built and installed version:
   "mcpServers": {
     "mcp-bring": {
       "command": "node",
-      "args": ["/ABSOLUTE/PATH/TO/bring-mcp/build/index.js"],
+      "args": ["/ABSOLUTE/PATH/TO/bring-mcp/build/src/index.js"],
       "env": {
         "MAIL": "your_bring_email@example.com",
         "PW": "YOUR_BRING_PASSWORD_HERE"

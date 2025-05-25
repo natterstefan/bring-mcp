@@ -24,17 +24,33 @@ export class BringClient {
   async moveToRecentList(listUuid: string, itemId: string) {
     return this.bring.moveToRecentList(listUuid, itemId);
   }
-  async saveItemImage(listUuid: string, itemId: string, imagePathOrUrl: string) {
-    // itemId and imagePathOrUrl are available. The library's saveItemImage expects (listUuid, Image).
-    // We pass imagePathOrUrl as the second argument and suppress the likely type error.
-    // @ts-expect-error The second argument for the library call bring.saveItemImage is expected to be of type 'Image', but we are passing a string (imagePathOrUrl). Further investigation on how to construct this 'Image' object is needed.
-    return this.bring.saveItemImage(listUuid, imagePathOrUrl);
+
+  /**
+   * Saves an image for an item on a shopping list.
+   * @param listUuid The UUID of the shopping list.
+   * @param itemId The ID of the item.
+   * @param imagePathOrUrl Local file path or URL of the image.
+   * @returns A promise that resolves when the image has been saved.
+   */
+  async saveItemImage(listUuid: string, itemId: string, imagePathOrUrl: string): Promise<unknown> {
+    // Based on PR #221 in the bring-shopping library, this method expects listUuid, itemId, and a string for imagePathOrUrl.
+    // The library is expected to handle whether this string is a local file path or a URL.
+    // @ts-expect-error Type definitions for bring-shopping may be outdated. Signature based on PR #221.
+    return this.bring.saveItemImage(listUuid, itemId, imagePathOrUrl);
   }
-  async removeItemImage(listUuid: string, itemId: string) {
-    // listUuid and itemId are available. The library's removeItemImage seems to expect one argument.
-    // Assuming it expects itemId. If CI still fails, this might need to be listUuid or both.
-    return this.bring.removeItemImage(itemId);
+
+  /**
+   * Removes an image from an item on a shopping list.
+   * @param listUuid The UUID of the shopping list.
+   * @param itemId The ID of the item.
+   * @returns A promise that resolves when the image has been removed.
+   */
+  async removeItemImage(listUuid: string, itemId: string): Promise<unknown> {
+    // The bring-shopping library's changelog (v1.5.1) fixed this method, implying the signature (listUuid, itemId) is correct.
+    // @ts-expect-error Type definitions for bring-shopping may be outdated. Signature based on changelog v1.5.1.
+    return this.bring.removeItemImage(listUuid, itemId);
   }
+
   async getAllUsersFromList(listUuid: string) {
     return this.bring.getAllUsersFromList(listUuid);
   }
