@@ -1,12 +1,15 @@
 # .github/workflows/nodejs-ci.yml
 
-name: 🔬 Node.js CI
+name: 🧪 Node.js CI
 
 on:
   push:
-    branches: ['main']
+    branches: [main]
   pull_request:
-    branches: ['main']
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   test:
