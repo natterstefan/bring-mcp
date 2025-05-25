@@ -32,7 +32,7 @@ jobs:
 
       - name: ✍️ Add shebang to CLI entrypoint
         run: |
-          FILE="build/index.js"
+          FILE="build/src/index.js"
           SHEBANG='#!/usr/bin/env node'
           if ! head -n 1 "$FILE" | grep -q "$SHEBANG"; then
             echo "Injecting shebang into $FILE"
