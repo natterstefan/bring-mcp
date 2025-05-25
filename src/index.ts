@@ -276,9 +276,10 @@ server.tool(
 async function main() {
   if (!process.env.MAIL || !process.env.PW) {
     console.error(
-      'Missing MAIL or PW environment variables. Please create a .env file with your Bring credentials (e.g., MAIL=your_email@example.com\nPW=your_password).',
+      'Missing MAIL or PW environment variables. Please create a .env file with your Bring credentials (e.g., MAIL=your_email@example.com\\nPW=your_password).',
     );
     process.exit(1);
+    return;
   }
 
   const transport = new StdioServerTransport();

@@ -21,6 +21,16 @@ export let mockLoadTranslations: jest.MockedFunction<(...args: unknown[]) => Pro
 export let mockLoadCatalog: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
 export let mockGetPendingInvitations: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
 
+// --- Mock for StdioServerTransport ---
+export const mockStdioServerTransportInstance = {
+  // Potentially mock methods like .on, .send if used by McpServer.connect
+  // For now, it's an empty object, assuming McpServer.connect itself is what we are testing mostly.
+};
+
+jest.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
+  StdioServerTransport: jest.fn(() => mockStdioServerTransportInstance), // Ensure this mock is used
+}));
+
 jest.mock('../src/bringClient.js', () => {
   mockLogin = jest.fn();
   mockLoadLists = jest.fn();
@@ -54,6 +64,8 @@ jest.mock('../src/bringClient.js', () => {
       loadCatalog: mockLoadCatalog,
       getPendingInvitations: mockGetPendingInvitations,
     })),
+    connect: jest.fn(),
+    listen: jest.fn(), // Adding listen as it might be called by connect
   };
 });
 
@@ -76,15 +88,12 @@ export const mockMcpServerInstance = {
       mockTools.set(name, { description, schema, callback });
     },
   ),
-  connect: jest.fn(),
+  connect: jest.fn<() => Promise<void>>(),
+  listen: jest.fn(),
 };
 
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
   McpServer: jest.fn(() => mockMcpServerInstance),
-}));
-
-jest.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
-  StdioServerTransport: jest.fn(() => ({})),
 }));
 
 jest.mock('dotenv/config', () => ({}));
