@@ -2,11 +2,18 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { BringClient } from '../bringClient.js';
 import { registerTool } from '../index.js';
-import { listUuidParam, itemIdParam } from '../schemaShared.js';
+import {
+  listUuidParam,
+  itemIdParam,
+  itemNameParam,
+  itemSpecificationParam,
+  saveItemBatchParams,
+  itemNamesArrayParam,
+} from '../schemaShared.js';
 
 export function registerItemTools(server: McpServer, bc: BringClient) {
   const getItemsParams = z.object({
-    listUuid: listUuidParam,
+    ...listUuidParam,
   });
   registerTool({
     server,
@@ -19,7 +26,7 @@ export function registerItemTools(server: McpServer, bc: BringClient) {
   });
 
   const getItemsDetailsParams = z.object({
-    listUuid: listUuidParam,
+    ...listUuidParam,
   });
   registerTool({
     server,
@@ -31,26 +38,41 @@ export function registerItemTools(server: McpServer, bc: BringClient) {
     failureMessage: 'Failed to get item details',
   });
 
-  const saveItemParams = z.object({
-    listUuid: listUuidParam,
-    itemName: z.string().describe('The name of the item to save.'),
-    specification: z.string().optional().describe("Additional details for the item (e.g., '2 pcs', 'organic')."),
-  });
   registerTool({
     server,
     bc,
     name: 'saveItem',
     description:
-      'Save an item to a specific shopping list. Optionally include a specification (e.g., quantity, brand).',
-    schemaShape: saveItemParams.shape,
-    actionFn: async (args: z.infer<typeof saveItemParams>, bc: BringClient) =>
-      bc.saveItem(args.listUuid, args.itemName, args.specification),
+      'Save an item to a shopping list. Use the "specification" parameter to add details like quantity or type (e.g., itemName: "Milk", specification: "2 liters").',
+    schemaShape: { ...listUuidParam, ...itemNameParam, ...itemSpecificationParam },
+    actionFn: async (args: { listUuid: string; itemName: string; specification?: string | null }, bc) => {
+      return bc.saveItem(args.listUuid, args.itemName, args.specification);
+    },
+    transformResult: (result: unknown) => ({
+      content: [{ type: 'text', text: `Item saved: ${JSON.stringify(result)}` }],
+    }),
     failureMessage: 'Failed to save item',
   });
 
+  registerTool({
+    server,
+    bc,
+    name: 'saveItemBatch',
+    description:
+      'Save multiple items to a shopping list. For each item, you can provide an "itemName" and an optional "specification" for details like quantity or type (e.g., { itemName: "Eggs", specification: "dozen" }).',
+    schemaShape: saveItemBatchParams,
+    actionFn: async (args: { listUuid: string; items: { itemName: string; specification?: string | null }[] }, bc) => {
+      return bc.saveItemBatch(args.listUuid, args.items);
+    },
+    transformResult: (result: unknown) => ({
+      content: [{ type: 'text', text: `Batch items saved: ${JSON.stringify(result)}` }],
+    }),
+    failureMessage: 'Failed to save batch items',
+  });
+
   const removeItemParams = z.object({
-    listUuid: listUuidParam,
-    itemId: itemIdParam,
+    ...listUuidParam,
+    ...itemIdParam,
   });
   registerTool({
     server,
@@ -64,8 +86,8 @@ export function registerItemTools(server: McpServer, bc: BringClient) {
   });
 
   const moveToRecentListParams = z.object({
-    listUuid: listUuidParam,
-    itemId: itemIdParam,
+    ...listUuidParam,
+    ...itemIdParam,
   });
   registerTool({
     server,
@@ -79,8 +101,8 @@ export function registerItemTools(server: McpServer, bc: BringClient) {
   });
 
   const saveItemImageParams = z.object({
-    listUuid: listUuidParam,
-    itemId: itemIdParam,
+    ...listUuidParam,
+    ...itemIdParam,
     imagePathOrUrl: z.string().describe('Local file path or URL of the image.'),
   });
   registerTool({
@@ -95,8 +117,8 @@ export function registerItemTools(server: McpServer, bc: BringClient) {
   });
 
   const removeItemImageParams = z.object({
-    listUuid: listUuidParam,
-    itemId: itemIdParam,
+    ...listUuidParam,
+    ...itemIdParam,
   });
   registerTool({
     server,
@@ -107,5 +129,23 @@ export function registerItemTools(server: McpServer, bc: BringClient) {
     actionFn: async (args: z.infer<typeof removeItemImageParams>, bc: BringClient) =>
       bc.removeItemImage(args.listUuid, args.itemId),
     failureMessage: 'Failed to remove item image',
+  });
+
+  const deleteMultipleItemsParams = z.object({
+    ...listUuidParam,
+    ...itemNamesArrayParam,
+  });
+  registerTool({
+    server,
+    bc,
+    name: 'deleteMultipleItemsFromList',
+    description: 'Delete multiple items from a specific shopping list by their names.',
+    schemaShape: deleteMultipleItemsParams.shape,
+    actionFn: async (args: z.infer<typeof deleteMultipleItemsParams>, bc: BringClient) =>
+      bc.deleteMultipleItemsFromList(args.listUuid, args.itemNames),
+    transformResult: (result: unknown) => ({
+      content: [{ type: 'text', text: `Multiple items deleted: ${JSON.stringify(result)}` }],
+    }),
+    failureMessage: 'Failed to delete multiple items',
   });
 }

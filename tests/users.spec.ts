@@ -54,6 +54,7 @@ describe('MCP Bring! Server - User Tools', () => {
       ];
       mockGetAllUsersFromList.mockResolvedValue(fakeUsers);
       const tool = getTool('getAllUsersFromList');
+      if (!tool) throw new Error('Tool getAllUsersFromList not found');
       const result = await tool.callback({ listUuid: fakeListUuid });
       expect(mockGetAllUsersFromList).toHaveBeenCalledWith(fakeListUuid);
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(fakeUsers, null, 2) }] });
@@ -64,6 +65,7 @@ describe('MCP Bring! Server - User Tools', () => {
       const error = new Error('Failed to get users');
       mockGetAllUsersFromList.mockRejectedValue(error);
       const tool = getTool('getAllUsersFromList');
+      if (!tool) throw new Error('Tool getAllUsersFromList not found');
       const result = await tool.callback({ listUuid: fakeListUuid });
       expect(result).toEqual({
         content: [{ type: 'text', text: `Failed to get all users from list: ${error.message}` }],
@@ -90,6 +92,7 @@ describe('MCP Bring! Server - User Tools', () => {
       const fakeSettings = { theme: 'dark', notifications: true };
       mockGetUserSettings.mockResolvedValue(fakeSettings);
       const tool = getTool('getUserSettings');
+      if (!tool) throw new Error('Tool getUserSettings not found');
       const result = await tool.callback({});
       expect(mockGetUserSettings).toHaveBeenCalledTimes(1);
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(fakeSettings, null, 2) }] });
@@ -99,6 +102,7 @@ describe('MCP Bring! Server - User Tools', () => {
       const error = new Error('Failed to get settings');
       mockGetUserSettings.mockRejectedValue(error);
       const tool = getTool('getUserSettings');
+      if (!tool) throw new Error('Tool getUserSettings not found');
       const result = await tool.callback({});
       expect(result).toEqual({ content: [{ type: 'text', text: `Failed to get user settings: ${error.message}` }] });
     });
@@ -123,6 +127,7 @@ describe('MCP Bring! Server - User Tools', () => {
       const fakeInvitations = [{ listId: 'list-invite', fromUser: 'UserA' }];
       mockGetPendingInvitations.mockResolvedValue(fakeInvitations);
       const tool = getTool('getPendingInvitations');
+      if (!tool) throw new Error('Tool getPendingInvitations not found');
       const result = await tool.callback({});
       expect(mockGetPendingInvitations).toHaveBeenCalledTimes(1);
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(fakeInvitations, null, 2) }] });
@@ -132,9 +137,68 @@ describe('MCP Bring! Server - User Tools', () => {
       const error = new Error('Failed to get invitations');
       mockGetPendingInvitations.mockRejectedValue(error);
       const tool = getTool('getPendingInvitations');
+      if (!tool) throw new Error('Tool getPendingInvitations not found');
       const result = await tool.callback({});
       expect(result).toEqual({
         content: [{ type: 'text', text: `Failed to get pending invitations: ${error.message}` }],
+      });
+    });
+  });
+
+  // Test for getDefaultList
+  describe('bring.getDefaultList tool', () => {
+    it('should be registered correctly', () => {
+      expect(mockMcpServerInstance.tool).toHaveBeenCalledWith(
+        'getDefaultList',
+        'Get the UUID of the default shopping list for the authenticated user.',
+        {}, // No schema for this tool
+        expect.any(Function),
+      );
+      const tool = getTool('getDefaultList');
+      expect(tool).toBeDefined();
+      expect(tool?.description).toBe('Get the UUID of the default shopping list for the authenticated user.');
+      expect(tool?.schema).toEqual({});
+    });
+
+    it('should return default list UUID on success', async () => {
+      const fakeSettings = { defaultListUUID: 'default-list-uuid-123' };
+      // We mock getUserSettings because getDefaultList calls it internally
+      mockGetUserSettings.mockResolvedValue(fakeSettings);
+      const tool = getTool('getDefaultList');
+      if (!tool) throw new Error('Tool getDefaultList not found');
+
+      const result = await tool.callback({});
+      expect(mockGetUserSettings).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        content: [{ type: 'text', text: JSON.stringify(fakeSettings.defaultListUUID, null, 2) }],
+      });
+    });
+
+    it('should return error if defaultListUUID is not found in settings', async () => {
+      const fakeSettingsWithoutUuid = { someOtherSetting: 'value' };
+      mockGetUserSettings.mockResolvedValue(fakeSettingsWithoutUuid);
+      const tool = getTool('getDefaultList');
+      if (!tool) throw new Error('Tool getDefaultList not found');
+
+      const result = await tool.callback({});
+      expect(mockGetUserSettings).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        content: [
+          { type: 'text', text: 'Failed to get default list UUID: Default list UUID not found in user settings.' },
+        ],
+      });
+    });
+
+    it('should return error if getUserSettings fails', async () => {
+      const error = new Error('Failed to get user settings from API');
+      mockGetUserSettings.mockRejectedValue(error);
+      const tool = getTool('getDefaultList');
+      if (!tool) throw new Error('Tool getDefaultList not found');
+
+      const result = await tool.callback({});
+      expect(mockGetUserSettings).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        content: [{ type: 'text', text: `Failed to get default list UUID: ${error.message}` }],
       });
     });
   });

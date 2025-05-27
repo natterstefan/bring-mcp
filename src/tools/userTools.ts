@@ -6,7 +6,7 @@ import { listUuidParam } from '../schemaShared.js';
 
 export function registerUserTools(server: McpServer, bc: BringClient) {
   const getAllUsersFromListParams = z.object({
-    listUuid: listUuidParam,
+    ...listUuidParam,
   });
   registerTool({
     server,
@@ -37,5 +37,24 @@ export function registerUserTools(server: McpServer, bc: BringClient) {
     schemaShape: undefined,
     actionFn: async (_args: undefined, bc: BringClient) => bc.getPendingInvitations(),
     failureMessage: 'Failed to get pending invitations',
+  });
+
+  registerTool({
+    server,
+    bc,
+    name: 'getDefaultList',
+    description: 'Get the UUID of the default shopping list for the authenticated user.',
+    schemaShape: undefined,
+    actionFn: async (_args: undefined, bc: BringClient) => {
+      const settings = await bc.getUserSettings();
+      // @ts-expect-error The bring-shopping type GetUserSettingsResponse may be outdated
+      // and not include defaultListUUID, which is expected based on API observation.
+      if (settings && settings.defaultListUUID) {
+        // @ts-expect-error The bring-shopping type GetUserSettingsResponse may be outdated.
+        return settings.defaultListUUID;
+      }
+      throw new Error('Default list UUID not found in user settings.');
+    },
+    failureMessage: 'Failed to get default list UUID',
   });
 }

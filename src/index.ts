@@ -106,18 +106,6 @@ async function main() {
 
   const bc = new BringClient(); // Instantiated after env check
 
-  // Register login tool (remains in index.ts as it's a general auth tool)
-  registerTool({
-    server,
-    bc,
-    name: 'login',
-    description: 'Authenticate with Bring! API. Call this first.',
-    schemaShape: undefined, // Explicitly undefined
-    actionFn: async (_args: undefined, bc: BringClient) => bc.login(),
-    transformResult: () => textToolResult('Successfully logged in to Bring!'),
-    failureMessage: 'Login failed',
-  });
-
   // Register tools from modules
   registerListTools(server, bc);
   registerItemTools(server, bc);

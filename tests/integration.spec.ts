@@ -109,11 +109,11 @@ describe('MCP Bring! Server - Integration Tests (Main Entry Point)', () => {
   });
 
   const expectedToolNames = [
-    'login',
     'loadLists',
     'getItems',
     'getItemsDetails',
     'saveItem',
+    'saveItemBatch',
     'removeItem',
     'moveToRecentList',
     'saveItemImage',
@@ -123,6 +123,8 @@ describe('MCP Bring! Server - Integration Tests (Main Entry Point)', () => {
     'loadTranslations',
     'loadCatalog',
     'getPendingInvitations',
+    'deleteMultipleItemsFromList',
+    'getDefaultList',
   ];
 
   it('should register all expected tools on McpServer', async () => {

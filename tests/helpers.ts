@@ -11,6 +11,7 @@ export let mockLoadLists: jest.MockedFunction<(...args: unknown[]) => Promise<un
 export let mockGetItems: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
 export let mockGetItemsDetails: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
 export let mockSaveItem: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
+export let mockSaveItemBatch: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
 export let mockRemoveItem: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
 export let mockMoveToRecentList: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
 export let mockSaveItemImage: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
@@ -20,6 +21,7 @@ export let mockGetUserSettings: jest.MockedFunction<(...args: unknown[]) => Prom
 export let mockLoadTranslations: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
 export let mockLoadCatalog: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
 export let mockGetPendingInvitations: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
+export let mockDeleteMultipleItemsFromList: jest.MockedFunction<(...args: unknown[]) => Promise<unknown>>;
 
 // --- Mock for StdioServerTransport ---
 export const mockStdioServerTransportInstance = {
@@ -37,6 +39,7 @@ jest.mock('../src/bringClient.js', () => {
   mockGetItems = jest.fn();
   mockGetItemsDetails = jest.fn();
   mockSaveItem = jest.fn();
+  mockSaveItemBatch = jest.fn();
   mockRemoveItem = jest.fn();
   mockMoveToRecentList = jest.fn();
   mockSaveItemImage = jest.fn();
@@ -46,14 +49,15 @@ jest.mock('../src/bringClient.js', () => {
   mockLoadTranslations = jest.fn();
   mockLoadCatalog = jest.fn();
   mockGetPendingInvitations = jest.fn();
+  mockDeleteMultipleItemsFromList = jest.fn();
 
   return {
     BringClient: jest.fn().mockImplementation(() => ({
-      login: mockLogin,
       loadLists: mockLoadLists,
       getItems: mockGetItems,
       getItemsDetails: mockGetItemsDetails,
       saveItem: mockSaveItem,
+      saveItemBatch: mockSaveItemBatch,
       removeItem: mockRemoveItem,
       moveToRecentList: mockMoveToRecentList,
       saveItemImage: mockSaveItemImage,
@@ -63,6 +67,7 @@ jest.mock('../src/bringClient.js', () => {
       loadTranslations: mockLoadTranslations,
       loadCatalog: mockLoadCatalog,
       getPendingInvitations: mockGetPendingInvitations,
+      deleteMultipleItemsFromList: mockDeleteMultipleItemsFromList,
     })),
     connect: jest.fn(),
     listen: jest.fn(), // Adding listen as it might be called by connect
@@ -72,7 +77,7 @@ jest.mock('../src/bringClient.js', () => {
 export interface McpTool {
   description: string;
   schema: Record<string, unknown>;
-  callback: (...args: Record<string, unknown>[]) => Promise<Record<string, unknown>>;
+  callback: (...args: Record<string, unknown>[]) => Promise<{ content: { type: string; text: string }[] }>;
 }
 
 export const mockTools: Map<string, McpTool> = new Map();
@@ -83,7 +88,7 @@ export const mockMcpServerInstance = {
       name: string,
       description: string,
       schema: Record<string, unknown>,
-      callback: (...args: Record<string, unknown>[]) => Promise<Record<string, unknown>>,
+      callback: (...args: Record<string, unknown>[]) => Promise<{ content: { type: string; text: string }[] }>,
     ) => {
       mockTools.set(name, { description, schema, callback });
     },
@@ -105,12 +110,8 @@ export async function loadServer() {
   await import('../src/index.js');
 }
 
-export function getTool(name: string): McpTool {
-  const tool = mockTools.get(name);
-  if (!tool) {
-    throw new Error(`Tool "${name}" not found. Make sure it was registered.`);
-  }
-  return tool;
+export function getTool(name: string): McpTool | undefined {
+  return mockTools.get(name);
 }
 
 // Ensure all mock variables are exported correctly

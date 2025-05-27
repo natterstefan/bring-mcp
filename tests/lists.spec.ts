@@ -42,6 +42,7 @@ describe('MCP Bring! Server - List Tools', () => {
       mockLoadLists.mockResolvedValue(fakeLists);
 
       const tool = getTool('loadLists');
+      if (!tool) throw new Error('Tool loadLists not found');
       const result = await tool.callback({});
 
       expect(mockLoadLists).toHaveBeenCalledTimes(1);
@@ -55,6 +56,7 @@ describe('MCP Bring! Server - List Tools', () => {
       mockLoadLists.mockRejectedValue(new Error(errorMessage));
 
       const tool = getTool('loadLists');
+      if (!tool) throw new Error('Tool loadLists not found');
       const result = await tool.callback({});
 
       expect(mockLoadLists).toHaveBeenCalledTimes(1);

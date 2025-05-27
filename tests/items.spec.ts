@@ -2,12 +2,14 @@ import {
   mockGetItems,
   mockGetItemsDetails,
   mockSaveItem,
+  mockSaveItemBatch,
   mockRemoveItem,
   mockMoveToRecentList,
   mockMcpServerInstance,
   mockTools,
   loadServer,
   getTool,
+  mockDeleteMultipleItemsFromList,
 } from './helpers'; // Import from helpers
 
 let consoleErrorSpy: jest.SpyInstance;
@@ -40,15 +42,63 @@ describe('MCP Bring! Server - Item Tools', () => {
 
     it('should call BringClient.getItems with listUuid and return items', async () => {
       const fakeListUuid = 'test-list-uuid';
-      const fakeItems = [{ id: 'item1', name: 'Milk' }];
-      mockGetItems.mockResolvedValue(fakeItems);
+      const fakeItemsInput = [{ id: 'item1', name: 'Milk', specification: '1L' }];
+      // This is what mockGetItems (from BringClient) should now resolve to
+      const fakeItemsExpectedByTool = fakeItemsInput.map((item) => ({ ...item, itemId: item.name }));
+
+      mockGetItems.mockResolvedValue(fakeItemsExpectedByTool);
 
       const getItemsTool = getTool('getItems');
+      if (!getItemsTool) throw new Error('Tool getItems not found');
       const result = await getItemsTool.callback({ listUuid: fakeListUuid });
 
       expect(mockGetItems).toHaveBeenCalledWith(fakeListUuid);
       expect(result).toEqual({
-        content: [{ type: 'text', text: JSON.stringify(fakeItems, null, 2) }],
+        content: [{ type: 'text', text: JSON.stringify(fakeItemsExpectedByTool, null, 2) }],
+      });
+    });
+
+    it('should include itemId in purchase and recently items', async () => {
+      const fakeListUuid = 'test-list-uuid';
+      // This now represents the data *after* BringClient.getItems has processed it
+      const mockTransformedApiResponse = {
+        uuid: fakeListUuid,
+        status: 'SHARED',
+        purchase: [
+          { name: 'Milk', specification: '1L', itemId: 'Milk' },
+          { name: 'Eggs', specification: '12 pack', itemId: 'Eggs' },
+        ],
+        recently: [{ name: 'Bread', specification: 'Whole grain', itemId: 'Bread' }],
+      };
+      // mockGetItems (representing the mocked BringClient.getItems) should resolve
+      // with this transformed data.
+      mockGetItems.mockResolvedValue(mockTransformedApiResponse);
+
+      const tool = getTool('getItems');
+      if (!tool) throw new Error('Tool getItems not found');
+      const result = await tool.callback({ listUuid: fakeListUuid });
+
+      expect(mockGetItems).toHaveBeenCalledWith(fakeListUuid);
+      const parsedResult = JSON.parse((result.content[0] as { text: string }).text);
+
+      interface TestItem {
+        name: string;
+        specification: string;
+        itemId?: string;
+      }
+
+      // Check purchase items
+      expect(parsedResult.purchase).toBeInstanceOf(Array);
+      parsedResult.purchase.forEach((item: TestItem) => {
+        expect(item.itemId).toBe(item.name);
+        expect(item.name).not.toBeUndefined(); // ensure name is there for comparison
+      });
+
+      // Check recently items
+      expect(parsedResult.recently).toBeInstanceOf(Array);
+      parsedResult.recently.forEach((item: TestItem) => {
+        expect(item.itemId).toBe(item.name);
+        expect(item.name).not.toBeUndefined(); // ensure name is there for comparison
       });
     });
 
@@ -58,6 +108,7 @@ describe('MCP Bring! Server - Item Tools', () => {
       mockGetItems.mockRejectedValue(new Error(errorMessage));
 
       const getItemsTool = getTool('getItems');
+      if (!getItemsTool) throw new Error('Tool getItems not found');
       const result = await getItemsTool.callback({ listUuid: fakeListUuid });
 
       expect(mockGetItems).toHaveBeenCalledWith(fakeListUuid);
@@ -88,6 +139,7 @@ describe('MCP Bring! Server - Item Tools', () => {
       mockGetItemsDetails.mockResolvedValue(fakeItemDetails);
 
       const tool = getTool('getItemsDetails');
+      if (!tool) throw new Error('Tool getItemsDetails not found');
       const result = await tool.callback({ listUuid: fakeListUuid }); // Corrected: only pass listUuid
 
       expect(mockGetItemsDetails).toHaveBeenCalledWith(fakeListUuid); // Corrected: only expect listUuid
@@ -102,6 +154,7 @@ describe('MCP Bring! Server - Item Tools', () => {
       const errorMessage = 'Item details not found';
       mockGetItemsDetails.mockRejectedValue(new Error(errorMessage));
       const tool = getTool('getItemsDetails');
+      if (!tool) throw new Error('Tool getItemsDetails not found');
       const result = await tool.callback({ listUuid: fakeListUuid }); // Corrected: only pass listUuid
       expect(mockGetItemsDetails).toHaveBeenCalledWith(fakeListUuid); // Corrected: only expect listUuid
       expect(result).toEqual({ content: [{ type: 'text', text: `Failed to get item details: ${errorMessage}` }] });
@@ -112,7 +165,7 @@ describe('MCP Bring! Server - Item Tools', () => {
     it('should be registered with correct name, description, and schema', () => {
       expect(mockMcpServerInstance.tool).toHaveBeenCalledWith(
         'saveItem',
-        'Save an item to a specific shopping list. Optionally include a specification (e.g., quantity, brand).',
+        'Save an item to a shopping list. Use the "specification" parameter to add details like quantity or type (e.g., itemName: "Milk", specification: "2 liters").',
         expect.objectContaining({
           listUuid: expect.anything(),
           itemName: expect.anything(),
@@ -123,8 +176,8 @@ describe('MCP Bring! Server - Item Tools', () => {
       const tool = getTool('saveItem');
       expect(tool).toBeDefined();
       expect(tool?.description).toBe(
-        'Save an item to a specific shopping list. Optionally include a specification (e.g., quantity, brand).',
-      ); // Corrected
+        'Save an item to a shopping list. Use the "specification" parameter to add details like quantity or type (e.g., itemName: "Milk", specification: "2 liters").',
+      );
       expect(tool?.schema).toMatchObject({ listUuid: {}, itemName: {}, specification: {} });
     });
 
@@ -135,6 +188,7 @@ describe('MCP Bring! Server - Item Tools', () => {
       const savedItemConfirmation = { itemId: 'item-xyz', message: 'Item saved successfully' };
       mockSaveItem.mockResolvedValue(savedItemConfirmation);
       const tool = getTool('saveItem');
+      if (!tool) throw new Error('Tool saveItem not found');
       const result = await tool.callback({
         listUuid: fakeListUuid,
         itemName: fakeItemName,
@@ -142,7 +196,9 @@ describe('MCP Bring! Server - Item Tools', () => {
       });
       // This is the critical check. If args.specification is not passed correctly from Zod, this will fail.
       expect(mockSaveItem).toHaveBeenCalledWith(fakeListUuid, fakeItemName, fakeItemSpec);
-      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(savedItemConfirmation, null, 2) }] });
+      expect(result).toEqual({
+        content: [{ type: 'text', text: `Item saved: ${JSON.stringify(savedItemConfirmation)}` }],
+      });
     });
 
     it('should return an error message on failed saveItem', async () => {
@@ -152,6 +208,7 @@ describe('MCP Bring! Server - Item Tools', () => {
       const errorMessage = 'Could not save item';
       mockSaveItem.mockRejectedValue(new Error(errorMessage));
       const tool = getTool('saveItem');
+      if (!tool) throw new Error('Tool saveItem not found');
       const result = await tool.callback({
         listUuid: fakeListUuid,
         itemName: fakeItemName,
@@ -183,6 +240,7 @@ describe('MCP Bring! Server - Item Tools', () => {
       mockRemoveItem.mockResolvedValue(successResponse);
 
       const tool = getTool('removeItem');
+      if (!tool) throw new Error('Tool removeItem not found');
       const result = await tool.callback({ listUuid: fakeListUuid, itemId: fakeItemId });
 
       expect(mockRemoveItem).toHaveBeenCalledWith(fakeListUuid, fakeItemId);
@@ -198,6 +256,7 @@ describe('MCP Bring! Server - Item Tools', () => {
       mockRemoveItem.mockRejectedValue(new Error(errorMessage));
 
       const tool = getTool('removeItem');
+      if (!tool) throw new Error('Tool removeItem not found');
       const result = await tool.callback({ listUuid: fakeListUuid, itemId: fakeItemId });
 
       expect(mockRemoveItem).toHaveBeenCalledWith(fakeListUuid, fakeItemId);
@@ -228,6 +287,7 @@ describe('MCP Bring! Server - Item Tools', () => {
       mockMoveToRecentList.mockResolvedValue(successResponse);
 
       const tool = getTool('moveToRecentList');
+      if (!tool) throw new Error('Tool moveToRecentList not found');
       const result = await tool.callback({ listUuid: fakeListUuid, itemId: fakeItemId });
 
       expect(mockMoveToRecentList).toHaveBeenCalledWith(fakeListUuid, fakeItemId);
@@ -243,11 +303,121 @@ describe('MCP Bring! Server - Item Tools', () => {
       mockMoveToRecentList.mockRejectedValue(new Error(errorMessage));
 
       const tool = getTool('moveToRecentList');
+      if (!tool) throw new Error('Tool moveToRecentList not found');
       const result = await tool.callback({ listUuid: fakeListUuid, itemId: fakeItemId });
 
       expect(mockMoveToRecentList).toHaveBeenCalledWith(fakeListUuid, fakeItemId);
       expect(result).toEqual({
         content: [{ type: 'text', text: `Failed to move item to recent list: ${errorMessage}` }],
+      });
+    });
+  });
+
+  describe('bring.saveItemBatch tool', () => {
+    it('should be registered with correct name, description, and schema', () => {
+      expect(mockMcpServerInstance.tool).toHaveBeenCalledWith(
+        'saveItemBatch',
+        'Save multiple items to a shopping list. For each item, you can provide an "itemName" and an optional "specification" for details like quantity or type (e.g., { itemName: "Eggs", specification: "dozen" }).',
+        expect.objectContaining({ listUuid: expect.anything(), items: expect.anything() }),
+        expect.any(Function),
+      );
+      const tool = getTool('saveItemBatch');
+      expect(tool).toBeDefined();
+      expect(tool?.description).toBe(
+        'Save multiple items to a shopping list. For each item, you can provide an "itemName" and an optional "specification" for details like quantity or type (e.g., { itemName: "Eggs", specification: "dozen" }).',
+      );
+      // Check for listUuid and items properties in the schema
+      expect(tool?.schema).toMatchObject({ listUuid: {}, items: {} });
+    });
+
+    it('should call BringClient.saveItemBatch with correct arguments and return success message', async () => {
+      const fakeListUuid = 'list-batch-save';
+      const fakeItems = [
+        { itemName: 'Milk', specification: '1 liter' },
+        { itemName: 'Bread' }, // No specification
+      ];
+      const successResponse = [{ itemId: 'milk-123' }, { itemId: 'bread-456' }];
+      mockSaveItemBatch.mockResolvedValue(successResponse);
+
+      const tool = getTool('saveItemBatch');
+      if (!tool) throw new Error('Tool saveItemBatch not found');
+      const result = await tool.callback({ listUuid: fakeListUuid, items: fakeItems });
+
+      expect(mockSaveItemBatch).toHaveBeenCalledWith(fakeListUuid, fakeItems);
+      expect(result).toEqual({
+        content: [{ type: 'text', text: `Batch items saved: ${JSON.stringify(successResponse)}` }],
+      });
+    });
+
+    it('should return an error message on failed saveItemBatch', async () => {
+      const fakeListUuid = 'list-batch-save-fail';
+      const fakeItems = [{ itemName: 'Sugar' }];
+      const errorMessage = 'Batch save failed';
+      mockSaveItemBatch.mockRejectedValue(new Error(errorMessage));
+
+      const tool = getTool('saveItemBatch');
+      if (!tool) throw new Error('Tool saveItemBatch not found');
+      const result = await tool.callback({ listUuid: fakeListUuid, items: fakeItems });
+
+      expect(mockSaveItemBatch).toHaveBeenCalledWith(fakeListUuid, fakeItems);
+      expect(result).toEqual({
+        content: [{ type: 'text', text: `Failed to save batch items: ${errorMessage}` }],
+      });
+    });
+  });
+
+  describe('bring.deleteMultipleItemsFromList tool', () => {
+    const listUuid = 'test-list-uuid';
+    const itemNamesToDelete = ['ItemA', 'ItemB'];
+
+    it('should be registered with correct name, description, and schema', () => {
+      expect(mockMcpServerInstance.tool).toHaveBeenCalledWith(
+        'deleteMultipleItemsFromList',
+        'Delete multiple items from a specific shopping list by their names.',
+        expect.objectContaining({ listUuid: expect.anything(), itemNames: expect.anything() }),
+        expect.any(Function),
+      );
+      const tool = getTool('deleteMultipleItemsFromList');
+      expect(tool).toBeDefined();
+      expect(tool?.description).toBe('Delete multiple items from a specific shopping list by their names.');
+      expect(tool?.schema).toMatchObject({
+        listUuid: expect.anything(),
+        itemNames: expect.objectContaining({ _def: expect.objectContaining({ typeName: 'ZodArray' }) }),
+      });
+    });
+
+    it('should call BringClient.deleteMultipleItemsFromList and return success', async () => {
+      const mockSuccessResponse = { count: itemNamesToDelete.length, status: 'deleted' };
+      mockDeleteMultipleItemsFromList.mockResolvedValue(mockSuccessResponse);
+
+      const tool = getTool('deleteMultipleItemsFromList');
+      if (!tool) throw new Error('Tool deleteMultipleItemsFromList not found');
+
+      const result = await tool.callback({ listUuid, itemNames: itemNamesToDelete });
+
+      expect(mockDeleteMultipleItemsFromList).toHaveBeenCalledTimes(1);
+      expect(mockDeleteMultipleItemsFromList).toHaveBeenCalledWith(listUuid, itemNamesToDelete);
+
+      // Uses transformResult from itemTools.ts
+      expect(result).toEqual({
+        content: [{ type: 'text', text: `Multiple items deleted: ${JSON.stringify(mockSuccessResponse)}` }],
+      });
+    });
+
+    it('should return an error message if BringClient.deleteMultipleItemsFromList fails', async () => {
+      const errorMessage = 'Failed to delete from client';
+      mockDeleteMultipleItemsFromList.mockRejectedValueOnce(new Error(errorMessage));
+
+      const tool = getTool('deleteMultipleItemsFromList');
+      if (!tool) throw new Error('Tool deleteMultipleItemsFromList not found');
+
+      const result = await tool.callback({ listUuid, itemNames: itemNamesToDelete });
+
+      expect(mockDeleteMultipleItemsFromList).toHaveBeenCalledTimes(1);
+      expect(mockDeleteMultipleItemsFromList).toHaveBeenCalledWith(listUuid, itemNamesToDelete);
+
+      expect(result).toEqual({
+        content: [{ type: 'text', text: `Failed to delete multiple items: ${errorMessage}` }],
       });
     });
   });

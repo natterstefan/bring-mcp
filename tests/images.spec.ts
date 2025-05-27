@@ -48,6 +48,7 @@ describe('MCP Bring! Server - Image Tools', () => {
       const successResponse = { message: 'Image saved successfully' };
       mockSaveItemImage.mockResolvedValue(successResponse);
       const tool = getTool('saveItemImage');
+      if (!tool) throw new Error('Tool saveItemImage not found');
       const result = await tool.callback({ listUuid: fakeListUuid, itemId: fakeItemId, imagePathOrUrl: fakeImagePath });
       expect(mockSaveItemImage).toHaveBeenCalledWith(fakeListUuid, fakeItemId, fakeImagePath);
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(successResponse, null, 2) }] });
@@ -60,6 +61,7 @@ describe('MCP Bring! Server - Image Tools', () => {
       const errorMessage = 'Could not save image';
       mockSaveItemImage.mockRejectedValue(new Error(errorMessage));
       const tool = getTool('saveItemImage');
+      if (!tool) throw new Error('Tool saveItemImage not found');
       const result = await tool.callback({ listUuid: fakeListUuid, itemId: fakeItemId, imagePathOrUrl: fakeImagePath });
       expect(mockSaveItemImage).toHaveBeenCalledWith(fakeListUuid, fakeItemId, fakeImagePath);
       expect(result).toEqual({ content: [{ type: 'text', text: `Failed to save item image: ${errorMessage}` }] });
@@ -86,6 +88,7 @@ describe('MCP Bring! Server - Image Tools', () => {
       const successResponse = { message: 'Image removed successfully' };
       mockRemoveItemImage.mockResolvedValue(successResponse);
       const tool = getTool('removeItemImage');
+      if (!tool) throw new Error('Tool removeItemImage not found');
       const result = await tool.callback({ listUuid: fakeListUuid, itemId: fakeItemId });
       expect(mockRemoveItemImage).toHaveBeenCalledWith(fakeListUuid, fakeItemId);
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(successResponse, null, 2) }] });
@@ -97,6 +100,7 @@ describe('MCP Bring! Server - Image Tools', () => {
       const errorMessage = 'Could not remove image';
       mockRemoveItemImage.mockRejectedValue(new Error(errorMessage));
       const tool = getTool('removeItemImage');
+      if (!tool) throw new Error('Tool removeItemImage not found');
       const result = await tool.callback({ listUuid: fakeListUuid, itemId: fakeItemId });
       expect(mockRemoveItemImage).toHaveBeenCalledWith(fakeListUuid, fakeItemId);
       expect(result).toEqual({ content: [{ type: 'text', text: `Failed to remove item image: ${errorMessage}` }] });
