@@ -32,7 +32,7 @@ export function registerItemTools(server: McpServer, bc: BringClient) {
     server,
     bc,
     name: 'getItemsDetails',
-    description: 'Get details for items in a list. (Currently might only take listUuid)',
+    description: 'Get details for items in a list. (Take listUuid)',
     schemaShape: getItemsDetailsParams.shape,
     actionFn: async (args: z.infer<typeof getItemsDetailsParams>, bc: BringClient) => bc.getItemsDetails(args.listUuid),
     failureMessage: 'Failed to get item details',
@@ -59,7 +59,7 @@ export function registerItemTools(server: McpServer, bc: BringClient) {
     bc,
     name: 'saveItemBatch',
     description:
-      'Save multiple items to a shopping list. For each item, you can provide an "itemName" and an optional "specification" for details like quantity or type (e.g., { itemName: "Eggs", specification: "dozen" }).',
+      'Save multiple items to a shopping list. For each item, you can provide an "itemName" and an optional "specification" for details like quantity or type (input e.g., [{ "itemName": "Eggs", "specification": "dozen" },{ "itemName":"Apples", "specification": "10" }]).',
     schemaShape: saveItemBatchParams,
     actionFn: async (args: { listUuid: string; items: { itemName: string; specification?: string | null }[] }, bc) => {
       return bc.saveItemBatch(args.listUuid, args.items);

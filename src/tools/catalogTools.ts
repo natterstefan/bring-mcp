@@ -8,7 +8,7 @@ export function registerCatalogTools(server: McpServer, bc: BringClient) {
     locale: z
       .string()
       .optional()
-      .describe("The locale for translations (e.g., 'de-CH', 'fr-FR'). Defaults to 'en-US' if not provided."),
+      .describe("The locale for translations (e.g., 'de-DE', 'fr-FR'). Defaults to 'en-US' if not provided."),
   });
   registerTool({
     server,
@@ -22,7 +22,7 @@ export function registerCatalogTools(server: McpServer, bc: BringClient) {
   });
 
   const loadCatalogParams = z.object({
-    locale: z.string().describe("The locale for the catalog (e.g., 'de-CH', 'en-US')."),
+    locale: z.string().describe("The locale for the catalog (e.g., 'de-DE', 'en-US')."),
   });
   registerTool({
     server,

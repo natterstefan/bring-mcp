@@ -150,13 +150,15 @@ describe('MCP Bring! Server - User Tools', () => {
     it('should be registered correctly', () => {
       expect(mockMcpServerInstance.tool).toHaveBeenCalledWith(
         'getDefaultList',
-        'Get the UUID of the default shopping list for the authenticated user.',
+        'Get the UUID of the default shopping list for the authenticated user. Use this if the user does not ask for a special list.',
         {}, // No schema for this tool
         expect.any(Function),
       );
       const tool = getTool('getDefaultList');
       expect(tool).toBeDefined();
-      expect(tool?.description).toBe('Get the UUID of the default shopping list for the authenticated user.');
+      expect(tool?.description).toBe(
+        'Get the UUID of the default shopping list for the authenticated user. Use this if the user does not ask for a special list.',
+      );
       expect(tool?.schema).toEqual({});
     });
 

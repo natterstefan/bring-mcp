@@ -43,7 +43,8 @@ export function registerUserTools(server: McpServer, bc: BringClient) {
     server,
     bc,
     name: 'getDefaultList',
-    description: 'Get the UUID of the default shopping list for the authenticated user. Use this if the user does not ask for a special list.',
+    description:
+      'Get the UUID of the default shopping list for the authenticated user. Use this if the user does not ask for a special list.',
     schemaShape: undefined,
     actionFn: async (_args: undefined, bc: BringClient) => {
       const settings = await bc.getUserSettings();

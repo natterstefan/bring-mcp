@@ -122,13 +122,13 @@ describe('MCP Bring! Server - Item Tools', () => {
     it('should be registered with correct name, description, and schema', () => {
       expect(mockMcpServerInstance.tool).toHaveBeenCalledWith(
         'getItemsDetails',
-        'Get details for items in a list. (Currently might only take listUuid)', // Corrected description
+        'Get details for items in a list. (Take listUuid)', // Corrected description
         expect.objectContaining({ listUuid: expect.anything() }), // Adjusted schema check
         expect.any(Function),
       );
       const tool = getTool('getItemsDetails');
       expect(tool).toBeDefined();
-      expect(tool?.description).toBe('Get details for items in a list. (Currently might only take listUuid)');
+      expect(tool?.description).toBe('Get details for items in a list. (Take listUuid)');
       expect(tool?.schema).toMatchObject({ listUuid: {} }); // Schema has only listUuid
     });
 
@@ -317,14 +317,14 @@ describe('MCP Bring! Server - Item Tools', () => {
     it('should be registered with correct name, description, and schema', () => {
       expect(mockMcpServerInstance.tool).toHaveBeenCalledWith(
         'saveItemBatch',
-        'Save multiple items to a shopping list. For each item, you can provide an "itemName" and an optional "specification" for details like quantity or type (e.g., { itemName: "Eggs", specification: "dozen" }).',
+        'Save multiple items to a shopping list. For each item, you can provide an "itemName" and an optional "specification" for details like quantity or type (input e.g., [{ "itemName": "Eggs", "specification": "dozen" },{ "itemName":"Apples", "specification": "10" }]).',
         expect.objectContaining({ listUuid: expect.anything(), items: expect.anything() }),
         expect.any(Function),
       );
       const tool = getTool('saveItemBatch');
       expect(tool).toBeDefined();
       expect(tool?.description).toBe(
-        'Save multiple items to a shopping list. For each item, you can provide an "itemName" and an optional "specification" for details like quantity or type (e.g., { itemName: "Eggs", specification: "dozen" }).',
+        'Save multiple items to a shopping list. For each item, you can provide an "itemName" and an optional "specification" for details like quantity or type (input e.g., [{ "itemName": "Eggs", "specification": "dozen" },{ "itemName":"Apples", "specification": "10" }]).',
       );
       // Check for listUuid and items properties in the schema
       expect(tool?.schema).toMatchObject({ listUuid: {}, items: {} });
