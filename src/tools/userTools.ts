@@ -43,18 +43,26 @@ export function registerUserTools(server: McpServer, bc: BringClient) {
     server,
     bc,
     name: 'getDefaultList',
-    description: 'Get the UUID of the default shopping list for the authenticated user.',
+    description: 'Get the UUID of the default shopping list for the authenticated user. Use this if the user does not ask for a special list.',
     schemaShape: undefined,
     actionFn: async (_args: undefined, bc: BringClient) => {
       const settings = await bc.getUserSettings();
       // @ts-expect-error The bring-shopping type GetUserSettingsResponse may be outdated
-      // and not include defaultListUUID, which is expected based on API observation.
-      if (settings && settings.defaultListUUID) {
+      // and not include usersettings array structure, which is expected based on API observation.
+      if (settings && settings.usersettings && Array.isArray(settings.usersettings)) {
         // @ts-expect-error The bring-shopping type GetUserSettingsResponse may be outdated.
-        return settings.defaultListUUID;
+        const defaultListSetting = settings.usersettings.find(
+          (setting: { key: string; value: string }) => setting.key === 'defaultListUUID',
+        );
+        if (defaultListSetting) {
+          return defaultListSetting.value;
+        }
       }
       throw new Error('Default list UUID not found in user settings.');
     },
     failureMessage: 'Failed to get default list UUID',
+    transformResult: (result: string) => ({
+      content: [{ type: 'text', text: result }],
+    }),
   });
 }

@@ -161,7 +161,13 @@ describe('MCP Bring! Server - User Tools', () => {
     });
 
     it('should return default list UUID on success', async () => {
-      const fakeSettings = { defaultListUUID: 'default-list-uuid-123' };
+      const fakeSettings = {
+        usersettings: [
+          { key: 'someOtherSetting', value: 'someValue' },
+          { key: 'defaultListUUID', value: 'default-list-uuid-123' },
+          { key: 'anotherSetting', value: 'anotherValue' },
+        ],
+      };
       // We mock getUserSettings because getDefaultList calls it internally
       mockGetUserSettings.mockResolvedValue(fakeSettings);
       const tool = getTool('getDefaultList');
@@ -170,12 +176,17 @@ describe('MCP Bring! Server - User Tools', () => {
       const result = await tool.callback({});
       expect(mockGetUserSettings).toHaveBeenCalledTimes(1);
       expect(result).toEqual({
-        content: [{ type: 'text', text: JSON.stringify(fakeSettings.defaultListUUID, null, 2) }],
+        content: [{ type: 'text', text: 'default-list-uuid-123' }],
       });
     });
 
     it('should return error if defaultListUUID is not found in settings', async () => {
-      const fakeSettingsWithoutUuid = { someOtherSetting: 'value' };
+      const fakeSettingsWithoutUuid = {
+        usersettings: [
+          { key: 'someOtherSetting', value: 'someValue' },
+          { key: 'anotherSetting', value: 'anotherValue' },
+        ],
+      };
       mockGetUserSettings.mockResolvedValue(fakeSettingsWithoutUuid);
       const tool = getTool('getDefaultList');
       if (!tool) throw new Error('Tool getDefaultList not found');
@@ -199,6 +210,21 @@ describe('MCP Bring! Server - User Tools', () => {
       expect(mockGetUserSettings).toHaveBeenCalledTimes(1);
       expect(result).toEqual({
         content: [{ type: 'text', text: `Failed to get default list UUID: ${error.message}` }],
+      });
+    });
+
+    it('should return error if usersettings structure is invalid', async () => {
+      const fakeSettingsInvalidStructure = { someOtherProperty: 'value' }; // Missing usersettings array
+      mockGetUserSettings.mockResolvedValue(fakeSettingsInvalidStructure);
+      const tool = getTool('getDefaultList');
+      if (!tool) throw new Error('Tool getDefaultList not found');
+
+      const result = await tool.callback({});
+      expect(mockGetUserSettings).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        content: [
+          { type: 'text', text: 'Failed to get default list UUID: Default list UUID not found in user settings.' },
+        ],
       });
     });
   });
