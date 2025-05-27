@@ -38,16 +38,37 @@ This is the recommended and most portable configuration. It ensures you always u
 
 ## 🚀 Features
 
+- **Automatic Authentication**: No manual login required - authentication happens automatically on first API call
 - Exposes Bring! API functions as MCP tools:
-  - 🔐 Login
   - 🧾 Load shopping lists
   - 🛒 Get and modify items (add, remove, move)
+  - 📦 Batch operations (save multiple items, delete multiple items)
   - 🖼 Save/remove item images
   - 👥 Manage list users
+  - 🎯 Get default shopping list UUID
   - 🌐 Load translations & catalog
   - 📨 Retrieve pending invitations
 - Communicates via STDIO (for use with Claude Desktop or MCP Inspector)
 - Supports Bring! credentials via `.env` file or injected environment variables
+
+### Available Tools
+
+- **`loadLists`**: Load all shopping lists from Bring!
+- **`getItems`**: Get all items from a specific shopping list
+- **`getItemsDetails`**: Get details for items in a list
+- **`saveItem`**: Save an item to a shopping list with optional specification
+- **`saveItemBatch`**: Save multiple items to a shopping list in one operation
+- **`removeItem`**: Remove an item from a specific shopping list
+- **`moveToRecentList`**: Move an item to the recently used items list
+- **`deleteMultipleItemsFromList`**: Delete multiple items from a list by their names
+- **`saveItemImage`**: Save an image for an item on a shopping list
+- **`removeItemImage`**: Remove an image from an item
+- **`getAllUsersFromList`**: Get all users associated with a shopping list
+- **`getUserSettings`**: Get settings for the authenticated user
+- **`getDefaultList`**: Get the UUID of the default shopping list (use when user doesn't specify a list)
+- **`loadTranslations`**: Load translations for the Bring! interface
+- **`loadCatalog`**: Load the Bring! item catalog
+- **`getPendingInvitations`**: Get pending invitations to join shopping lists
 
 ---
 
@@ -133,10 +154,48 @@ Alternatively, if you prefer a locally built and installed version:
 
 ---
 
+## 🔧 Development
+
+### Testing
+
+Run tests with:
+
+```bash
+npm run test
+```
+
+This command runs formatting, linting, and Jest tests with coverage reporting.
+
+For CI testing:
+
+```bash
+npm run test:ci
+```
+
+### Building
+
+Build the project:
+
+```bash
+npm run build
+```
+
+### Key Dependencies
+
+- `@modelcontextprotocol/sdk`: For MCP server implementation
+- `@modelcontextprotocol/inspector`: For testing and debugging MCP servers
+- `bring-shopping`: Node.js wrapper for the Bring! API
+- `zod`: For schema definition and validation
+- `dotenv`: For managing environment variables
+
+---
+
 ## ✅ Final Notes
 
 - 🔒 Avoid committing your `.env` file.
 - 🧼 Keep credentials out of version control.
 - 🛠 MCP Inspector is invaluable for debugging.
+- 🔄 Authentication is handled automatically - no manual login required.
+- 📦 Use batch operations for efficiency when working with multiple items.
 
 Happy coding with MCP and Bring! 🎉
