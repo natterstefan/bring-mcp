@@ -45,8 +45,8 @@ describe('MCP Bring! Server - Integration Tests (Main Entry Point)', () => {
   });
 
   it('should initialize StdioServerTransport and connect McpServer when env vars are set', async () => {
-    process.env.MAIL = 'test@example.com';
-    process.env.PW = 'password';
+    process.env.BRING_MAIL = 'test@example.com';
+    process.env.BRING_PASSWORD = 'password';
 
     // Dynamically import to trigger script execution
     await import('../src/index.js');
@@ -61,8 +61,8 @@ describe('MCP Bring! Server - Integration Tests (Main Entry Point)', () => {
   });
 
   it('should log an error and exit if MAIL environment variable is missing', async () => {
-    delete process.env.MAIL; // MAIL is missing
-    process.env.PW = 'password';
+    delete process.env.BRING_MAIL; // MAIL is missing
+    process.env.BRING_PASSWORD = 'password';
 
     await import('../src/index.js');
 
@@ -72,8 +72,8 @@ describe('MCP Bring! Server - Integration Tests (Main Entry Point)', () => {
   });
 
   it('should log an error and exit if PW environment variable is missing', async () => {
-    process.env.MAIL = 'test@example.com';
-    delete process.env.PW; // PW is missing
+    process.env.BRING_MAIL = 'test@example.com';
+    delete process.env.BRING_PASSWORD; // PW is missing
 
     await import('../src/index.js');
 
@@ -83,8 +83,8 @@ describe('MCP Bring! Server - Integration Tests (Main Entry Point)', () => {
   });
 
   it('should log an error and exit if both MAIL and PW environment variables are missing', async () => {
-    delete process.env.MAIL;
-    delete process.env.PW;
+    delete process.env.BRING_MAIL;
+    delete process.env.BRING_PASSWORD;
 
     await import('../src/index.js');
 
@@ -95,8 +95,8 @@ describe('MCP Bring! Server - Integration Tests (Main Entry Point)', () => {
 
   // Test the catch block of main
   it('should log fatal error and exit if server.connect throws', async () => {
-    process.env.MAIL = 'test@example.com';
-    process.env.PW = 'password';
+    process.env.BRING_MAIL = 'test@example.com';
+    process.env.BRING_PASSWORD = 'password';
 
     const connectError = new Error('Connection failed');
     mockMcpServerInstance.connect.mockRejectedValueOnce(connectError);
@@ -128,8 +128,8 @@ describe('MCP Bring! Server - Integration Tests (Main Entry Point)', () => {
   ];
 
   it('should register all expected tools on McpServer', async () => {
-    process.env.MAIL = 'test@example.com';
-    process.env.PW = 'password';
+    process.env.BRING_MAIL = 'test@example.com';
+    process.env.BRING_PASSWORD = 'password';
 
     await import('../src/index.js');
 

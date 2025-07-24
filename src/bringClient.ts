@@ -1,7 +1,7 @@
 import Bring from 'bring-shopping';
 
 export class BringClient {
-  private bring = new Bring({ mail: process.env.MAIL!, password: process.env.PW! });
+  private bring = new Bring({ mail: process.env.BRING_MAIL!, password: process.env.BRING_PASSWORD! });
   private isLoggedIn = false;
 
   private async _login() {

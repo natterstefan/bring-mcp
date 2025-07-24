@@ -105,8 +105,8 @@ jest.mock('dotenv/config', () => ({}));
 
 export async function loadServer() {
   jest.resetModules();
-  process.env.MAIL = 'test@example.com';
-  process.env.PW = 'testpassword';
+  process.env.BRING_MAIL = 'test@example.com';
+  process.env.BRING_PASSWORD = 'testpassword';
   await import('../src/index.js');
 }
 
@@ -203,8 +203,8 @@ export function getTool(name: string): McpTool | undefined {
 //   jest.resetModules(); // Reset modules to ensure index.ts is re-evaluated
 
 //   // Set up process.env before index.ts is loaded
-//   process.env.MAIL = 'test@example.com';
-//   process.env.PW = 'testpassword';
+//   process.env.BRING_MAIL = 'test@example.com';
+//   process.env.BRING_PASSWORD = 'testpassword';
 
 //   // Dynamically import index.ts AFTER mocks are set up
 //   // The path to index.js needs to be relative to this helpers.ts file,

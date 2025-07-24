@@ -21,8 +21,8 @@ jest.mock('bring-shopping', () => {
 describe('BringClient functionality', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.MAIL = 'test@example.com';
-    process.env.PW = 'pw';
+    process.env.BRING_MAIL = 'test@example.com';
+    process.env.BRING_PASSWORD = 'pw';
   });
 
   test('getItems adds itemId to purchase and recently items', async () => {

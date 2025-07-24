@@ -22,8 +22,8 @@ describe('BringClient Automatic Login', () => {
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     jest.clearAllMocks();
     // Reset environment variables for each test to ensure isolation
-    delete process.env.MAIL;
-    delete process.env.PW;
+    delete process.env.BRING_MAIL;
+    delete process.env.BRING_PASSWORD;
   });
 
   afterEach(() => {
@@ -31,8 +31,8 @@ describe('BringClient Automatic Login', () => {
   });
 
   it('should automatically login on the first API call and succeed if credentials are valid', async () => {
-    process.env.MAIL = 'test@example.com';
-    process.env.PW = 'password';
+    process.env.BRING_MAIL = 'test@example.com';
+    process.env.BRING_PASSWORD = 'password';
 
     mockBringLogin.mockResolvedValue(undefined); // Simulate successful login
     mockBringLoadLists.mockResolvedValue([]); // Simulate successful API call after login
@@ -45,8 +45,8 @@ describe('BringClient Automatic Login', () => {
   });
 
   it('should attempt login only once for multiple API calls if successful', async () => {
-    process.env.MAIL = 'test@example.com';
-    process.env.PW = 'password';
+    process.env.BRING_MAIL = 'test@example.com';
+    process.env.BRING_PASSWORD = 'password';
 
     mockBringLogin.mockResolvedValue(undefined);
     mockBringLoadLists.mockResolvedValue([]);
@@ -60,8 +60,8 @@ describe('BringClient Automatic Login', () => {
   });
 
   it('should fail the API call if automatic login fails due to invalid credentials', async () => {
-    process.env.MAIL = 'wrong@example.com';
-    process.env.PW = 'wrongpassword';
+    process.env.BRING_MAIL = 'wrong@example.com';
+    process.env.BRING_PASSWORD = 'wrongpassword';
     const loginError = new Error('Invalid Bring credentials');
     mockBringLogin.mockRejectedValue(loginError); // Simulate failed login
 
@@ -73,8 +73,8 @@ describe('BringClient Automatic Login', () => {
   });
 
   it('should re-attempt login on a subsequent API call if the first login attempt failed', async () => {
-    process.env.MAIL = 'firstfail@example.com';
-    process.env.PW = 'password';
+    process.env.BRING_MAIL = 'firstfail@example.com';
+    process.env.BRING_PASSWORD = 'password';
     const loginError = new Error('Login failed initially');
 
     // First attempt: Login fails
@@ -113,8 +113,8 @@ describe('MCP Bring! Server - Tool Registration (Post-Login Refactor)', () => {
   it("should no longer register a dedicated 'login' tool", async () => {
     // Simulate server loading to check registered tools
     // This might require mocking BringClient or its methods if loadServer uses them
-    process.env.MAIL = 'test@example.com'; // Needed for BringClient instantiation
-    process.env.PW = 'password';
+    process.env.BRING_MAIL = 'test@example.com'; // Needed for BringClient instantiation
+    process.env.BRING_PASSWORD = 'password';
     mockBringLogin.mockResolvedValue(undefined); // Prevent login issues during server load
 
     await loadServer(); // This populates mockTools
