@@ -1,3 +1,6 @@
+> **NOTE:**  
+> This fork is for testing purposes only. Tests were not updated.
+
 # MCP Server for Bring! Shopping
 
 ![bring-mcp](./assets/header.jpg)

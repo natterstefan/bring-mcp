@@ -4,14 +4,15 @@
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "scripts": {
-    "test": "npm run format && eslint . --ext .ts --fix && NODE_OPTIONS=--experimental-vm-modules jest",
-    "lint:ci": "prettier --check . && eslint . --ext .ts",
-    "test:ci": "npm run lint:ci && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
     "build": "tsc",
-    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest",
     "clean": "rm -rf node_modules package-lock.json build",
+    "format": "prettier --write .",
+    "lint:ci": "prettier --check . && eslint . --ext .ts",
     "rebuild": "npm run clean && npm install && npm run build",
-    "format": "prettier --write ."
+    "start": "node build/src/index.js",
+    "test:ci": "npm run lint:ci && NODE_OPTIONS=--experimental-vm-modules jest --coverage",
+    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test": "npm run format && eslint . --ext .ts --fix && NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "keywords": [
     "modelcontextprotocol",
@@ -35,9 +36,11 @@
     "@modelcontextprotocol/sdk": "^1.12.0",
     "bring-shopping": "^2.0.1",
     "dotenv": "^16.5.0",
+    "express": "^4.19.2",
     "zod": "^3.25.23"
   },
   "devDependencies": {
+    "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.3",
     "@typescript-eslint/eslint-plugin": "^8.32.1",

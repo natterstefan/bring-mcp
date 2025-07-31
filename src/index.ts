@@ -1,11 +1,10 @@
-#!/usr/bin/env node
-
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z, ZodRawShape, ZodObject } from 'zod';
-import { BringClient } from './bringClient.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import express from 'express';
 import 'dotenv/config';
 
+import { BringClient } from './bringClient.js';
 import { registerListTools } from './tools/listTools.js';
 import { registerItemTools } from './tools/itemTools.js';
 import { registerUserTools } from './tools/userTools.js';
@@ -92,13 +91,17 @@ export function registerTool(options: {
   }
 }
 
-// Register login tool and other tools moved into main
+const SERVER_CONFIG = {
+  name: 'bring',
+  version: '1.0.0',
+  capabilities: { resources: {}, tools: {} },
+};
 
 // Start the server
 async function main() {
   if (!process.env.BRING_MAIL || !process.env.BRING_PASSWORD) {
     console.error(
-      'Missing MAIL or PW environment variables. Please create a .env file with your Bring credentials (e.g., MAIL=your_email@example.com\nPW=your_password).',
+      'Missing BRING_MAIL, BRING_PASSWORD environment variables. Please create a .env file with your Bring credentials (e.g., MAIL=your_email@example.com\nPW=your_password).',
     );
     process.exit(1);
   }
@@ -111,9 +114,75 @@ async function main() {
   registerUserTools(server, bc);
   registerCatalogTools(server, bc);
 
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error('MCP server for Bring! API is running on STDIO');
+  const app = express();
+  app.use(express.json());
+
+  app.post('/mcp', async (req: express.Request, res: express.Response) => {
+    try {
+      const s = new McpServer(SERVER_CONFIG);
+      // Register tools for this instance
+      registerListTools(s, bc);
+      registerItemTools(s, bc);
+      registerUserTools(s, bc);
+      registerCatalogTools(s, bc);
+      const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+      res.on('close', () => {
+        console.log('Request closed');
+        transport.close();
+        s.close();
+      });
+      await s.connect(transport);
+      await transport.handleRequest(req, res, req.body);
+    } catch (error) {
+      console.error('Error handling MCP request:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          jsonrpc: '2.0',
+          error: {
+            code: -32603,
+            message: 'Internal server error',
+          },
+          id: null,
+        });
+      }
+      res.status(500).send('Internal Server Error');
+    }
+  });
+
+  // SSE notifications not supported in stateless mode
+  app.get('/mcp', async (req: express.Request, res: express.Response) => {
+    console.log('Received GET MCP request');
+    res.writeHead(405).end(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        error: {
+          code: -32000,
+          message: 'Method not allowed.',
+        },
+        id: null,
+      }),
+    );
+  });
+
+  // Session termination not needed in stateless mode
+  app.delete('/mcp', async (req: express.Request, res: express.Response) => {
+    console.log('Received DELETE MCP request');
+    res.writeHead(405).end(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        error: {
+          code: -32000,
+          message: 'Method not allowed.',
+        },
+        id: null,
+      }),
+    );
+  });
+
+  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  app.listen(port, () => {
+    console.log(`--> MCP server for Bring! API is running on HTTP :${port} /mcp`);
+  });
 }
 
 main().catch((e) => {
